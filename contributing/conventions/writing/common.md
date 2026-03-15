@@ -27,6 +27,7 @@
 - [4.25. Branch-on-remote references](#425-branch-on-remote-references)
 - [4.26. Example IP address](#426-example-ip-address)
 - [4.27. Troubleshooting sections](#427-troubleshooting-sections)
+- [4.28. JSON command output](#428-json-command-output)
 
 ## 4.1. Instructions wording
 
@@ -352,13 +353,13 @@ Replace placeholders:
 **Single placeholder (linked):**
 
 ~~~markdown
-Replace [`<placeholder>` placeholder](link-to-explanation).
+Replace the placeholder [`<placeholder>` placeholder](link-to-explanation).
 ~~~
 
 **Single placeholder (not linked):**
 
 ~~~markdown
-Replace `<placeholder>` placeholder with <explanation>.
+Replace the placeholder `<placeholder>` with <explanation>.
 ~~~
 
 ## 4.21. `docker compose up` commands
@@ -480,3 +481,11 @@ Start with an `<h3>Troubleshooting</h3>` label. Each issue is a bold sentence fo
 >
 > Resolution text.
 ```
+
+## 4.28. JSON command output
+
+Always pipe commands that produce `JSON` output to `jq` for readable formatting.
+
+Good: `curl http://localhost:3000/api/items | jq`
+
+Bad: `curl http://localhost:3000/api/items`
