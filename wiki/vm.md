@@ -140,8 +140,14 @@ Complete these steps:
 
 1. [Go to the VM page](#go-to-the-vm-page).
 2. Go to the `quick glance` sidebar (on the right).
-3. Go to `IP Address(es)`.
-4. You should see there `StudentsCourses01` - [`<your-vm-ip-address>`](#your-vm-ip-address-placeholder).
+3. Go to `IP ADDRESS(ES)`.
+4. You should see there:
+
+   ```
+   StudentsCourses01 - <your-vm-ip-address>
+   ```
+
+   See [`<your-vm-ip-address>`](#your-vm-ip-address-placeholder).
 
    Example: `StudentsCourses01` - `192.0.2.1`
 
