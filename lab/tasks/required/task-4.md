@@ -1,6 +1,6 @@
 # Deploy and Document
 
-Deploy the bot on your VM alongside the backend.
+The bot works locally via `--test` mode, but it's not a real product until it's running on the VM and responding in Telegram. In this task, you containerize the bot, add it to Docker Compose alongside the backend, and document how to deploy.
 
 ## Requirements targeted
 
@@ -13,21 +13,22 @@ Deploy the bot on your VM alongside the backend.
 
 ### 1. Bot Dockerfile (`bot/Dockerfile`)
 
-Installs dependencies from `bot/requirements.txt`, runs the bot entry point.
+Installs dependencies from `bot/requirements.txt` and runs the bot entry point.
 
 ### 2. Bot service in `docker-compose.yml`
 
+Add a `bot` service to the existing compose file:
 - Connects to backend via Docker network (service name, not `localhost`)
 - Reads `BOT_TOKEN` and LLM credentials from environment
 - Restarts unless stopped
 
 ### 3. Deployment verification
 
-Bot container runs alongside backend on VM. Both healthy.
+Bot container runs alongside the backend on your VM. Both are healthy.
 
 ### 4. README deploy section
 
-How to deploy: env vars, docker compose commands, verification.
+Add a "Deploy" section explaining: required env vars, docker compose commands, how to verify.
 
 ## Acceptance criteria
 
@@ -41,14 +42,4 @@ How to deploy: env vars, docker compose commands, verification.
 
 ## Agent instructions
 
-Follow these to maximize learning. Do not skip.
-
-**Engage before explaining.** Ask first, let the student think, then fill gaps.
-
-> Ask: "Why do we use multi-stage Docker builds?" Explain: build deps stay in builder stage, final image is smaller and more secure.
-
-> Ask: "The bot needs to reach the backend. Can it use `localhost`?" Explain Docker networking: Compose creates a shared network, services use service names.
-
-> When debugging connectivity, ask: "How would you diagnose this?" Show: `docker compose logs bot`, `docker exec`, check env vars. Teach the process.
-
-> Ask: "What would a new developer need to know to deploy this?" Use their answer as the README outline.
+> Ask: "The bot needs to reach the backend inside Docker. Can it use `localhost`?" Then explain: Docker Compose creates a shared network where services reach each other by name (e.g., `http://app:8000`), not `localhost`. This is the one thing that trips everyone up in deployment.

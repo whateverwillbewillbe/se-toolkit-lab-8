@@ -1,6 +1,6 @@
 # Backend Integration
 
-Connect the bot to your LMS backend with real data commands.
+A bot that only returns placeholder text isn't useful. In this task, you connect it to the real LMS backend — the same one you deployed in previous labs. After this, the bot fetches live data and formats it for the user.
 
 ## Requirements targeted
 
@@ -13,7 +13,7 @@ Connect the bot to your LMS backend with real data commands.
 
 ## What you will build
 
-5 slash commands hitting the real backend, verifiable via `--test`:
+5 slash commands hitting the real backend, all verifiable via `--test`:
 
 ```terminal
 $ python bot/bot.py --test "/health"
@@ -23,12 +23,23 @@ $ python bot/bot.py --test "/labs"
 Available labs:
 - Lab 01 — Products, Architecture & Roles
 - Lab 02 — Run, Fix, and Deploy
-...
+- Lab 03 — Backend API
+- Lab 04 — Testing, Front-end, and AI Agents
+- Lab 05 — Data Pipeline and Analytics
+- Lab 06 — Build Your Own Agent
 
 $ python bot/bot.py --test "/scores lab-04"
 Pass rates for Lab 04:
 - Repository Setup: 92.1% (187 attempts)
 - Back-end Testing: 71.4% (156 attempts)
+- Add Front-end: 68.3% (142 attempts)
+```
+
+When the backend is down, the bot should show a friendly message — not a Python traceback:
+
+```terminal
+$ python bot/bot.py --test "/health"
+Backend is not responding. Check that the services are running.
 ```
 
 ## Backend endpoints
@@ -48,19 +59,17 @@ All on `localhost:42002`, require `Authorization: Bearer YOUR_LMS_API_KEY`:
 | `POST /pipeline/sync` | Trigger ETL sync |
 
 > [!TIP]
-> Explore these in Swagger UI at `http://localhost:42002/docs` first.
+> Explore these in Swagger UI at `http://localhost:42002/docs` to see response formats before implementing.
 
 ## Required commands
 
 | Command | Endpoint | What it does |
 |---------|----------|-------------|
-| `/start` | — | Welcome message |
-| `/help` | — | Lists all commands |
-| `/health` | `GET /items/` | Reports healthy/unhealthy |
+| `/start` | — | Welcome message with bot name |
+| `/help` | — | Lists all commands with descriptions |
+| `/health` | `GET /items/` | Reports healthy/unhealthy status |
 | `/labs` | `GET /items/` | Lists labs (filter by type) |
-| `/scores <lab>` | `GET /analytics/pass-rates?lab=` | Per-task scores |
-
-When the backend is down, show a friendly message — not a traceback.
+| `/scores <lab>` | `GET /analytics/pass-rates?lab=` | Per-task scores for a lab |
 
 ## Acceptance criteria
 
@@ -74,16 +83,4 @@ When the backend is down, show a friendly message — not a traceback.
 
 ## Agent instructions
 
-Follow these to maximize learning. Do not skip.
-
-**Engage before explaining.** Ask first, let the student think, then fill gaps.
-
-**Build incrementally.** One command at a time. Test with `--test` after each. Don't implement all 5 at once.
-
-> Before each command, ask: "What HTTP call does this need? What could go wrong?" Fill in: status codes, auth, network errors.
-
-> Show the actual API response before formatting. Ask: "How would you present this to a user?"
-
-> For error handling, ask: "What should the user see when the backend is down?" Explain specific exception types vs bare `except:`.
-
-> After each command, run `--test` and ask: "Does this make sense? Edge cases?"
+> Build one command at a time. After each, run `--test` and show the output. Do not implement all 5 at once — the student needs to see each one work before moving on. Show the actual API response before formatting it so the student understands the data structure.

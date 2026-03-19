@@ -1,6 +1,8 @@
 # Intent-Based Natural Language Routing
 
-Make the bot understand plain text. The user types a question, and the bot uses an LLM to decide what data to fetch and how to answer.
+Slash commands work, but real users don't think in `/commands` — they ask questions like "which lab has the worst results?" In this task, you add an LLM-powered intent router: the user types plain text, and the bot figures out what data to fetch and how to answer.
+
+This builds on Lab 6 — same tool use pattern (give the LLM tools, let it decide), but now embedded in a user-facing product instead of a CLI.
 
 ## Requirements targeted
 
@@ -11,7 +13,7 @@ Make the bot understand plain text. The user types a question, and the bot uses 
 
 ## What you will build
 
-An intent router: plain text → LLM with tool definitions → API calls → formatted response.
+An intent router: user message → LLM with tool definitions → API calls → formatted response.
 
 ```terminal
 $ python bot/bot.py --test "which lab has the lowest pass rate?"
@@ -20,22 +22,23 @@ Based on the data, Lab 03 has the lowest average pass rate at 62.3%.
 - Security Hardening: 66.5% (132 attempts)
 ```
 
-This builds on Lab 6 — same tool use pattern, but embedded in a user-facing bot.
-
 ## How it works
 
 ```
 User: "which lab has the worst results?"
-  → sends message + tool definitions to LLM
+  → bot sends message + tool definitions to LLM
   → LLM decides: call get_pass_rates for each lab
   → bot executes the API calls
+  → feeds results back to LLM
   → LLM summarizes
   → bot sends response
 ```
 
+The LLM receives the user's message, a list of tools (your backend endpoints as function schemas), and a system prompt. It responds with tool calls. Your bot executes them, feeds results back, and the LLM produces the final answer.
+
 ## Required tools
 
-All 9 backend endpoints as LLM tools:
+Define all 9 backend endpoints as LLM tools — this gives the router enough variety for diverse questions:
 
 | Tool | Endpoint | LLM description |
 |------|----------|----------------|
@@ -49,7 +52,7 @@ All 9 backend endpoints as LLM tools:
 | `get_completion_rate` | `GET /analytics/completion-rate?lab=` | Completion rate percentage |
 | `trigger_sync` | `POST /pipeline/sync` | Refresh data from autochecker |
 
-Example schema:
+Example tool schema:
 
 ```python
 {
@@ -96,7 +99,7 @@ Example schema:
 
 ## Inline buttons
 
-Add keyboard buttons so users can discover actions without typing.
+Add keyboard buttons so users can discover actions without typing. For example, after `/start` show buttons for common queries.
 
 ## Acceptance criteria
 
@@ -109,16 +112,4 @@ Add keyboard buttons so users can discover actions without typing.
 
 ## Agent instructions
 
-Follow these to maximize learning. Do not skip.
-
-**Engage before explaining.** Ask first, let the student think, then fill gaps.
-
-> Ask: "Do you know how LLM function calling works? How does the LLM decide which tool to call?" If not, explain with one example: one tool, one message, the full loop (user → LLM → tool_call → execute → feed back → answer). Keep it short.
-
-> Ask: "Why does the tool description matter more than the prompt for tool selection?" Explain: the LLM reads descriptions to pick tools — poor descriptions mean wrong tools.
-
-> Before implementing, ask: "If the user says 'which lab has the lowest pass rate?', what should happen step by step?" Walk through together.
-
-> When debugging (wrong tool, text instead of tool call), ask: "What do you think went wrong?" Show the actual messages sent to the LLM. Teach the diagnostic process.
-
-> Ask: "What makes a good fallback vs a bad one?" Explain: showing capabilities beats "I don't understand."
+> Ask: "Do you know how LLM function calling works?" The student may have done it in Lab 6 but explain concisely anyway: the LLM gets a list of tools with descriptions and decides which to call based on the user's message. The tool description quality matters more than the system prompt — if the description is bad, the LLM picks the wrong tool regardless.
