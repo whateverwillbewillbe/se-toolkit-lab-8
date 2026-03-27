@@ -1,8 +1,17 @@
 [tool.uv.workspace]
-members = ["backend", "mcp", "qwen-code-api"]
+members = [
+  "backend",
+  "mcp",
+  "qwen-code-api",
+  "packages/nanobot-ai",
+  "nanobot",
+  "nanobot-websocket-channel",
+]
 
 [tool.uv.sources]
 lms-mcp = { workspace = true }
+nanobot-ai = { workspace = true }
+nanobot-webchat = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -105,20 +114,9 @@ help = "Query the Qwen Code API: poe query-qwen-code-api [OPTIONS] <prompt>"
 cmd = "python scripts/query-qwen-code-api.py"
 
 [tool.pyright]
-include = [
-  "backend",
-  "scripts",
-  "mcp",
-  "qwen-code-api",
-]
+include = ["backend", "scripts", "mcp", "qwen-code-api"]
 extraPaths = ["backend", "qwen-code-api"]
-exclude = [
-  "**/__pycache__",
-  "**/node_modules",
-  "**/.*",
-  ".venv",
-  ".direnv",
-]
+exclude = ["**/__pycache__", "**/node_modules", "**/.*", ".venv", ".direnv"]
 typeCheckingMode = "strict"
 reportAssignmentType = "none"
 reportIncompatibleVariableOverride = "none"
