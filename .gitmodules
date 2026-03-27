@@ -1,3 +1,6 @@
 [submodule "qwen-code-api"]
 	path = qwen-code-api
 	url = https://github.com/inno-se-toolkit/qwen-code-api-py
+[submodule "packages/nanobot-ai"]
+	path = packages/nanobot-ai
+	url = https://github.com/HKUDS/nanobot.git
