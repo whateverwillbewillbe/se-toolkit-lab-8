@@ -5,8 +5,10 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import urllib.request
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
+from urllib.parse import quote
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -16,6 +18,7 @@ from pydantic import BaseModel, Field
 from mcp_lms.client import LMSClient
 
 _base_url: str = ""
+_victorialogs_url: str = ""
 
 server = Server("lms")
 
@@ -35,6 +38,21 @@ class _LabQuery(BaseModel):
 class _TopLearnersQuery(_LabQuery):
     limit: int = Field(
         default=5, ge=1, description="Max learners to return (default 5)."
+    )
+
+
+class _LogsSearchQuery(BaseModel):
+    query: str = Field(
+        default="*",
+        description="LogsQL query string (e.g., 'level:error AND service:backend').",
+    )
+    limit: int = Field(default=10, ge=1, le=1000, description="Max logs to return.")
+
+
+class _LogsErrorCountQuery(BaseModel):
+    service: str = Field(default="", description="Service name to filter (optional).")
+    hours: int = Field(
+        default=1, ge=1, le=168, description="Time window in hours (max 7 days)."
     )
 
 
@@ -59,6 +77,33 @@ def _client() -> LMSClient:
             "LMS backend URL not configured. Pass it as: python -m mcp_lms <base_url>"
         )
     return LMSClient(_base_url, _resolve_api_key())
+
+
+def _victorialogs_client() -> str:
+    """Get VictoriaLogs base URL from environment."""
+    url = _victorialogs_url or os.environ.get("VICTORIALOGS_URL", "")
+    if not url:
+        # Default to Docker internal network URL
+        url = "http://victorialogs:9428"
+    return url
+
+
+def _query_victorialogs(query: str, limit: int = 10) -> list[dict[str, Any]]:
+    """Query VictoriaLogs using LogsQL."""
+    base_url = _victorialogs_client()
+    encoded_query = quote(query, safe="")
+    url = f"{base_url}/select/logsql/query?query={encoded_query}&limit={limit}"
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            data = response.read().decode("utf-8")
+            # VictoriaLogs returns newline-delimited JSON
+            results = []
+            for line in data.strip().split("\n"):
+                if line:
+                    results.append(json.loads(line))
+            return results
+    except Exception as e:
+        return [{"error": f"VictoriaLogs query failed: {type(e).__name__}: {e}"}]
 
 
 def _text(data: BaseModel | Sequence[BaseModel]) -> list[TextContent]:
@@ -110,6 +155,34 @@ async def _completion_rate(args: _LabQuery) -> list[TextContent]:
 
 async def _sync_pipeline(_args: _NoArgs) -> list[TextContent]:
     return _text(await _client().sync_pipeline())
+
+
+# ---------------------------------------------------------------------------
+# VictoriaLogs tool handlers
+# ---------------------------------------------------------------------------
+
+
+async def _logs_search(args: _LogsSearchQuery) -> list[TextContent]:
+    """Search logs using LogsQL."""
+    results = _query_victorialogs(args.query, args.limit)
+    return _text(results)
+
+
+async def _logs_error_count(args: _LogsErrorCountQuery) -> list[TextContent]:
+    """Count errors per service over a time window."""
+    # Build LogsQL query for errors (VictoriaLogs uses 'severity' field)
+    if args.service:
+        query = f'severity:ERROR AND service.name="{args.service}"'
+    else:
+        query = "severity:ERROR"
+    # Query with a large limit to count all errors
+    results = _query_victorialogs(query, limit=1000)
+    # Count errors by service
+    error_counts: dict[str, int] = {}
+    for entry in results:
+        service = entry.get("service.name", entry.get("service", "unknown"))
+        error_counts[service] = error_counts.get(service, 0) + 1
+    return _text([{"service": svc, "error_count": cnt} for svc, cnt in error_counts.items()])
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +256,20 @@ _register(
     "Trigger the LMS sync pipeline. May take a moment.",
     _NoArgs,
     _sync_pipeline,
+)
+
+# Register VictoriaLogs tools
+_register(
+    "logs_search",
+    "Search logs using LogsQL. Use 'level:error' to find errors, 'service.name=\"backend\"' to filter by service.",
+    _LogsSearchQuery,
+    _logs_search,
+)
+_register(
+    "logs_error_count",
+    "Count errors per service over a time window. Returns error counts grouped by service name.",
+    _LogsErrorCountQuery,
+    _logs_error_count,
 )
 
 

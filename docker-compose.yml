@@ -191,6 +191,7 @@ services:
       - NANOBOT_WEBCHAT_CONTAINER_PORT=${NANOBOT_WEBCHAT_CONTAINER_PORT:?'NANOBOT_WEBCHAT_CONTAINER_PORT is required'}
       - NANOBOT_LMS_BACKEND_URL=http://backend:${BACKEND_CONTAINER_PORT}
       - NANOBOT_LMS_API_KEY=${LMS_API_KEY:?'LMS_API_KEY is required'}
+      - VICTORIALOGS_URL=http://victorialogs:9428
       - NANOBOT_ACCESS_KEY=${NANOBOT_ACCESS_KEY:-}
     depends_on:
       - backend
