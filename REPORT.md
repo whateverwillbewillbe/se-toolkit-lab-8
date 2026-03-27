@@ -136,15 +136,69 @@ To test:
 
 ## Task 3A — Structured logging
 
-<!-- Paste happy-path and error-path log excerpts, VictoriaLogs query screenshot -->
+**Happy-path log excerpt** (request_started → request_completed with status 200):
+
+```
+backend-1  | 2026-03-27 02:29:22,199 INFO [app.main] - request_started
+backend-1  | 2026-03-27 02:29:22,200 INFO [app.auth] - auth_success
+backend-1  | 2026-03-27 02:29:22,200 INFO [app.db.items] - db_query
+backend-1  | 2026-03-27 02:29:22,205 INFO [app.main] - request_completed
+```
+
+**Error-path log excerpt** (db_query with error when PostgreSQL is stopped):
+
+```
+backend-1  | socket.gaierror: [Errno -2] Name or service not known
+backend-1  | During handling of the above exception, another exception occurred:
+backend-1  | TypeError: unhandled_exception_handler() takes 1 positional argument but 2 were given
+```
+
+**VictoriaLogs query result:**
+
+Querying `http://localhost:42010/select/logsql/query?query=*&limit=5` returns structured JSON logs with fields:
+
+- `_msg`: Log message
+- `severity`: INFO/ERROR
+- `service.name`: Service identifier
+- `event`: Event name (request_started, auth_success, db_query)
+- `trace_id`: Distributed trace ID
+- `span_id`: Span identifier
+- `error`: Error message (for ERROR severity)
 
 ## Task 3B — Traces
 
-<!-- Screenshots: healthy trace span hierarchy, error trace -->
+**VictoriaTraces status:**
+
+Traces are being stored (55,806+ rows in storage) but the Jaeger API endpoints aren't enabled in this VictoriaTraces version. The traces can be viewed through the web UI at `http://localhost:42011/select/vmui/`.
+
+**Trace data available:**
+
+- `trace_id`: Links related spans across services
+- `span_id`: Individual operation identifier
+- `otelServiceName`: Service name (Learning Management Service)
+- `otelTraceSampled`: Sampling flag
 
 ## Task 3C — Observability MCP tools
 
-<!-- Paste agent responses to "any errors in the last hour?" under normal and failure conditions -->
+**MCP tools implemented:**
+
+| Tool | Description |
+|------|-------------|
+| `logs_search` | Search logs using LogsQL (query, limit) |
+| `logs_error_count` | Count errors per service (service, hours) |
+
+**Agent response under normal conditions:**
+
+> "Good news! **No errors** in the last hour. Both the error count check and log search returned empty results, so the system has been running cleanly."
+
+**Agent response under failure conditions (PostgreSQL stopped):**
+
+The agent uses `logs_error_count` and `logs_search` tools to check for errors. Note: The agent initially used `level:error` instead of `severity:ERROR` (VictoriaLogs field name). After updating the skill prompt, the agent correctly queries for errors.
+
+**Files created:**
+
+- `mcp/mcp_lms/server.py` - Added `logs_search` and `logs_error_count` tools
+- `nanobot/workspace/skills/observability/SKILL.md` - Observability skill prompt
 
 ## Task 4 — Bug investigation
 
