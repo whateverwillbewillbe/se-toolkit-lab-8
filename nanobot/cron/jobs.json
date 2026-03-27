@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "health-check",
+      "name": "Health Check",
+      "enabled": true,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/2 * * * *",
+        "tz": "UTC"
+      },
+      "payload": {
+        "kind": "agent_turn",
+        "message": "Check for errors in the last 15 minutes and report a summary. Include:\n1. Error count by service\n2. Most recent error messages\n3. System health status\n4. Any recommendations if errors found",
+        "deliver": true,
+        "channel": "webchat"
+      },
+      "delete_after_run": false
+    }
+  ]
+}

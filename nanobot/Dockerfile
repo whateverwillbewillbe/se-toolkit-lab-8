@@ -57,6 +57,9 @@ RUN groupadd --system --gid 999 nonroot \
 # Copy the application
 COPY --from=builder --chown=nonroot:nonroot /app /app
 
+# Fix permissions for cron directory
+RUN mkdir -p /app/nanobot/workspace/cron && chown -R nonroot:nonroot /app/nanobot/workspace && chown nonroot:nonroot /app/nanobot/cron/jobs.json 2>/dev/null || true
+
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/nanobot"

@@ -54,7 +54,15 @@ def resolve_config() -> str:
 def main() -> None:
     """Resolve config and launch nanobot gateway."""
     resolved_config = resolve_config()
-    workspace = str(Path(__file__).parent / "workspace")
+    workspace = Path(__file__).parent / "workspace"
+
+    # Ensure cron directory exists and copy default jobs.json if needed
+    cron_dir = workspace / "cron"
+    cron_jobs = cron_dir / "jobs.json"
+    default_cron_jobs = Path(__file__).parent / "cron" / "jobs.json"
+    if not cron_jobs.exists() and default_cron_jobs.exists():
+        cron_dir.mkdir(parents=True, exist_ok=True)
+        cron_jobs.write_text(default_cron_jobs.read_text())
 
     # Launch nanobot gateway
     os.execvp(
@@ -65,7 +73,7 @@ def main() -> None:
             "--config",
             resolved_config,
             "--workspace",
-            workspace,
+            str(workspace),
         ],
     )
 
