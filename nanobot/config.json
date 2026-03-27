@@ -1,7 +1,7 @@
 {
   "agents": {
     "defaults": {
-      "workspace": "~/.nanobot/workspace",
+      "workspace": "./workspace",
       "model": "coder-model",
       "provider": "custom",
       "maxTokens": 8192,

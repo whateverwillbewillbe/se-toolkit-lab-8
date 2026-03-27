@@ -23,6 +23,30 @@ VictoriaLogs uses LogsQL for querying. Common patterns:
 
 **Note:** VictoriaLogs uses `severity` (not `level`) for log severity.
 
+## Multi-Step Investigation: "What went wrong?"
+
+**When the user asks "What went wrong?" or similar diagnostic questions, follow this investigation flow AUTOMATICALLY in a single response:**
+
+### Step 1: Search for recent errors
+Call `logs_search` with `query="severity:ERROR"` and `limit=10` to find recent error logs.
+
+### Step 2: Extract trace ID from error logs
+From the error log results, look for the `trace_id` field. This links the error to a distributed trace.
+
+### Step 3: Search for related events
+Call `logs_search` with a more specific query based on the error:
+- If `event:"db_query"` failed: `query='event:"db_query" AND severity:ERROR'`
+- If `event:"request_completed"` has status 500: `query='event:"request_completed" AND status:500'`
+
+### Step 4: Summarize the full picture
+Combine findings from all tool calls into a coherent summary:
+- **What failed**: The error message and affected service
+- **When**: Timestamp of the error
+- **Trace context**: The trace ID that links related operations
+- **Root cause hypothesis**: Based on the error type (e.g., "Database unavailable", "Connection timeout")
+
+**Do NOT ask follow-up questions.** Provide the complete investigation in one response.
+
 ## How to Use Tools
 
 ### When the user asks about errors
@@ -54,6 +78,7 @@ VictoriaLogs uses LogsQL for querying. Common patterns:
    - Which services are affected
    - Error messages (first 100 chars)
    - Timestamps of recent errors
+   - Trace IDs for correlation
 
 3. **Suggest next steps**:
    - "Would you like me to search for more details about a specific error?"
@@ -76,16 +101,28 @@ VictoriaLogs uses LogsQL for querying. Common patterns:
 >
 > The errors appear to be related to database connectivity issues. Would you like me to search for more details about the database errors?"
 
-### User: "What's wrong with the backend?"
+### User: "What went wrong?"
 
-**Your response:**
-> "Let me investigate the backend errors...
+**Your response (multi-step investigation):**
+> "I'll investigate what went wrong by checking recent errors and tracing the request flow.
 >
-> I found several recent errors:
-> 1. **Database connection failure**: `socket.gaierror: Name or service not known` - The backend cannot resolve the PostgreSQL hostname
-> 2. **Request failures**: 5 requests failed with status 500
+> **Error Summary:**
+> - **Service**: Learning Management Service
+> - **Error**: `socket.gaierror: [Errno -2] Name or service not known`
+> - **Event**: `db_query` operation failed
+> - **Time**: 2026-03-27 02:41:52 UTC
+> - **Trace ID**: `0c53fd82a0c8a80571aa3666629a71d3`
 >
-> This suggests the database service might be unavailable. Would you like me to check if there are any database service logs?"
+> **Root Cause:**
+> The backend cannot resolve the PostgreSQL hostname. This typically means:
+> 1. The PostgreSQL service is stopped or unreachable
+> 2. DNS resolution is failing in the container network
+>
+> **Impact:**
+> All database queries are failing, causing 500 errors on API endpoints that require database access.
+>
+> **Recommendation:**
+> Check if the PostgreSQL container is running: `docker compose ps postgres`"
 
 ### User: "Show me recent logs"
 
@@ -105,7 +142,8 @@ VictoriaLogs uses LogsQL for querying. Common patterns:
 
 - VictoriaLogs stores logs from all instrumented services
 - The `service.name` field identifies the source service
-- The `level` field indicates severity (INFO, WARN, ERROR)
+- The `severity` field indicates severity (INFO, ERROR)
 - The `event` field indicates the type of operation
 - The `trace_id` field links logs to distributed traces
 - Always summarize - users don't want to read raw JSON
+- For "what went wrong?" questions, chain multiple tool calls automatically
