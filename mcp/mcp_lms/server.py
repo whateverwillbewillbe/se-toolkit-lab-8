@@ -106,12 +106,21 @@ def _query_victorialogs(query: str, limit: int = 10) -> list[dict[str, Any]]:
         return [{"error": f"VictoriaLogs query failed: {type(e).__name__}: {e}"}]
 
 
-def _text(data: BaseModel | Sequence[BaseModel]) -> list[TextContent]:
-    """Serialize a pydantic model (or list of models) to a JSON text block."""
-    if isinstance(data, BaseModel):
+def _text(data: BaseModel | Sequence[BaseModel] | list[dict] | dict) -> list[TextContent]:
+    """Serialize a pydantic model (or list of models/dicts) to a JSON text block."""
+    if isinstance(data, dict):
+        payload = data
+    elif isinstance(data, list):
+        payload = []
+        for item in data:
+            if isinstance(item, BaseModel):
+                payload.append(item.model_dump())
+            else:
+                payload.append(item)
+    elif isinstance(data, BaseModel):
         payload = data.model_dump()
     else:
-        payload = [item.model_dump() for item in data]
+        payload = data
     return [TextContent(type="text", text=json.dumps(payload, ensure_ascii=False))]
 
 
