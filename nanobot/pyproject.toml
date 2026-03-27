@@ -1,0 +1,12 @@
+[project]
+name = "nanobot"
+version = "0.1.0"
+description = "Nanobot agent for LMS"
+readme = "README.md"
+requires-python = "==3.14.2"
+dependencies = ["nanobot-ai", "lms-mcp", "nanobot-webchat"]
+
+[tool.uv.sources]
+nanobot-ai = { workspace = true }
+lms-mcp = { workspace = true }
+nanobot-webchat = { workspace = true }

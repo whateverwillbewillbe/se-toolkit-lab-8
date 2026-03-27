@@ -4,3 +4,6 @@
 [submodule "packages/nanobot-ai"]
 	path = packages/nanobot-ai
 	url = https://github.com/HKUDS/nanobot.git
+[submodule "nanobot-websocket-channel"]
+	path = nanobot-websocket-channel
+	url = https://github.com/inno-se-toolkit/nanobot-websocket-channel.git
