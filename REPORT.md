@@ -353,3 +353,6 @@ Cron service started with 1 jobs
 ```
 
 The cron job runs every 2 minutes and delivers health reports to the webchat channel. When errors exist, the agent uses the observability tools to check error counts and log details, then posts a summary to the chat.
+
+<img width="2877" height="1309" alt="image" src="https://github.com/user-attachments/assets/22ff45f6-d4ce-492b-89d0-afe78d0077a5" />
+
